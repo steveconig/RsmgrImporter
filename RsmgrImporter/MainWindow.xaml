@@ -1,0 +1,35 @@
+﻿<Window x:Class="RsmgrImporter.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:RsmgrImporter"
+        mc:Ignorable="d" Title="Importer" Height="350" Width="550">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="20" />
+            <RowDefinition Height="20" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="40" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="30" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <TextBlock x:Name="lbl_Instructions" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" VerticalAlignment="Center" TextWrapping="Wrap" 
+                   Text="Select an import type." FontWeight="Bold" />
+        <Label x:Name="lbl_Warnings" HorizontalAlignment="Center" Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" VerticalAlignment="Center" />
+        <Button x:Name="Database_Import" Content="Database Sync" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="4" VerticalAlignment="Center" Width="100" Height="30"  Click="Database_Import_Click" />
+        <TextBlock x:Name="lbl_Data_Import" HorizontalAlignment="Left" Grid.Column="2" Grid.Row="4" VerticalAlignment="Center" TextWrapping="Wrap" Margin="5,0,5,0" 
+                   Text="Click Data Sync in order to sync old and new databases." />
+        <Button x:Name="Text_Import" Content="Scanner Import" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="3" VerticalAlignment="Center" Width="100" Height="30" Click="Text_Import_Click" />
+        <TextBlock x:Name="lbl_Text_Import" HorizontalAlignment="Left" Grid.Column="2" Grid.Row="3" VerticalAlignment="Center" TextWrapping="Wrap" Margin="5,0,5,0" 
+                   Text="Click Text Import in order to import text files created by inventory scanners." />
+        <Button x:Name="EndOfDay" Content="End of Day" HorizontalAlignment="Left" Grid.Column="1" Grid.Row="2" VerticalAlignment="Center" Width="100" Height="30" Click="EndOfDay_Click" />
+        <TextBlock x:Name="lbl_EndOfDay" HorizontalAlignment="Left" Grid.Column="2" Grid.Row="2" VerticalAlignment="Center" TextWrapping="Wrap" Margin="5,0,5,0" 
+                   Text="Click End Of Day to retrieve text files from other locations." />
+    </Grid>
+</Window>
