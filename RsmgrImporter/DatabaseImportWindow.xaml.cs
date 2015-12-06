@@ -19,6 +19,8 @@ namespace RsmgrImporter
     /// </summary>
     public partial class DatabaseImportWindow : Window
     {
+        private Logger logging = new Logger();
+
         public DatabaseImportWindow()
         {
             InitializeComponent();
@@ -27,10 +29,20 @@ namespace RsmgrImporter
         private void btnFullSync_Click(object sender, RoutedEventArgs e)
         {
             AccessQueries accquer = new AccessQueries();
+            SQLGetStatements getter = new SQLGetStatements();
+            txtDBSyncStatus.Text = "";
 
             if (cbEmployees.IsChecked.Value == true)
             {
-                txtDBSyncStatus.Text += "Employees Imported...\n";
+                int intvalue = 0;
+                string currowcount = "";
+                try { currowcount = getter.GetAppConfig("EmpRowCount"); }
+                catch (Exception e) { logging.writeToLog("Error: Convert EmpRowCount to Int : " + e.Message + "; Value = " + currowcount); }
+
+                try { intvalue = Convert.ToInt32(currowcount); }
+                catch (Exception e) { logging.writeToLog("Error: Convert EmpRowCount to Int : " + e.Message + "; Value = " + currowcount); }
+
+                txtDBSyncStatus.Text += "Importing Employees...\n";
                 accquer.ImportEmployees();  // Import Employees
             }
 
@@ -88,6 +100,7 @@ namespace RsmgrImporter
 
         private void btnDeltaSync_Click(object sender, RoutedEventArgs e)
         {
+            txtDBSyncStatus.Text = "";
 
         }
     }

@@ -48,32 +48,38 @@ namespace RsmgrImporter
 
         bool IfExists(string cmdtxt, string param, string pvalue)
         {
-            SqlConnection con = new SqlConnection(DBConLocal);
-            SqlCommand cmd = new SqlCommand();
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.CommandText = cmdtxt;
-            cmd.Connection = con;
-            DataTable dt = new DataTable();
-            SqlDataAdapter sda = new SqlDataAdapter(cmd);
-            cmd.Parameters.Add(param, SqlDbType.NVarChar).Value = pvalue;
-
-            try
+            bool retvalue = false;
+            using (SqlConnection con = new SqlConnection(DBConLocal))
             {
-                con.Open();
-                cmd.ExecuteNonQuery();
-                sda.Fill(dt);
-                con.Close();
+                using(SqlCommand cmd = new SqlCommand())
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.CommandText = cmdtxt;
+                    cmd.Connection = con;
+                    using (DataTable dt = new DataTable())
+                    {
+                        SqlDataAdapter sda = new SqlDataAdapter(cmd);
+                        cmd.Parameters.Add(param, SqlDbType.NVarChar).Value = pvalue;
 
-                int retvalue = dt.Rows.Count;
-                dt.Clear();
-                if (retvalue > 0) { return true; } else { return false; }
-                
+                        try
+                        {
+                            con.Open();
+                            cmd.ExecuteNonQuery();
+                            sda.Fill(dt);
+                            con.Close();
+
+                            int value = dt.Rows.Count;
+                            dt.Clear();
+                            if (value > 0) { retvalue = true; }
+                        }
+                        catch (Exception e)  // find out how to add to dt and return value
+                        {
+                            logging.writeToLog("Error: Insert IfExists" + e.Message);
+                        }
+                    }
+                }
             }
-            catch (Exception e)  // find out how to add to dt and return value
-            {
-                logging.writeToLog("Error: Insert IfExists" + e.Message);
-                return false;
-            }            
+            return retvalue;
         }
 
         public int GetVendorID(string vendornumber)
