@@ -14,8 +14,8 @@ namespace RsmgrImporter
             if (!File.Exists(exports)) { File.Create(exports); }
             if (ConfigurationManager.AppSettings["logfilepath"] == null)
             {
-                AddUpdateAppSettings("logfilepath", "System.AppDomain.CurrentDomain.BaseDirectory;");
-                AddUpdateAppSettings("exportpath", "System.AppDomain.CurrentDomain.BaseDirectory;");
+                AddUpdateAppSettings("logfilepath", "System.AppDomain.CurrentDomain.BaseDirectory");
+                AddUpdateAppSettings("exportpath", "System.AppDomain.CurrentDomain.BaseDirectory");
             }
 
         }

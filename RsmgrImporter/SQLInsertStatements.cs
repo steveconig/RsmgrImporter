@@ -12,6 +12,7 @@ namespace RsmgrImporter
         private Logger logging = new Logger();
 
 
+        // App Config
         public string InsertAppConfig(string ukey, string value)
         {
             string returnval = "";
@@ -43,6 +44,7 @@ namespace RsmgrImporter
             return returnval;
         }
 
+        // Addresses
         public int InsertAddress(string line1, string line2, string line3, string city, string state, string zipcode, string country, string details)
         {
             int returnid = 0;
@@ -78,6 +80,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Person
         public int InsertPerson(string firstname, string lastname, int addressid, string gender, string homephone, string cellphone, string workphone, string faxnumber, string birthday, string email, string comments, string ssn, string status)
         {
             int returnid = 0;
@@ -130,6 +133,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Employees
         public int InsertEmployee(string username, string password, string title, int personid, string startdate, string termdate)
         {
             #region Decelerations
@@ -189,6 +193,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Customers
         public int InsertCustomer(string accountnumber, int personid, string joindate, int cancharge, decimal chargelimit, int totalvisits, int defaultstoreid, decimal balance, int taxable)
         {
             #region Declerations
@@ -244,6 +249,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Category
         public int InsertCategory(string name, string description, int inuse)
         {
             int returnid = 0;
@@ -275,6 +281,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Departments
         public int InsertDepartment(string name, string number, int addressid, string comments, string status)
         {
             #region Declerations
@@ -312,6 +319,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Gift Cards
         public int InsertGiftcard(string giftcardnumber, string recordtime, decimal value, string status, int customerid, int employeeid)
         {
             #region Declerations
@@ -361,6 +369,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Inventory Log
         public int InsertInventoryLog(int itemid, string actiontime, int departmentid, int employeeid)
         {
             int returnid = 0;
@@ -400,6 +409,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Invoice Items
         public int InsertInvoiceItems(int invoiceid, int itemid, string description, string serialnumber, int line, decimal quantitypurchased, decimal itemcostprice, decimal itemunitprice, decimal discountpercent, int itemlocation, int invoicequantity)
         {
             int returnid = 0;
@@ -438,6 +448,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Invoices
         public int InsertInvoices(string invoicenumber, string ordertime, string receivetime, int vendorid, int employeeid, string comment, string paymenttype)
         {
             int returnid = 0;
@@ -485,6 +496,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Item Quantities
         public int InsertItemQuantities(int itemid, int departmentid, int quantity, string status)
         {
             int returnid = 0;
@@ -517,6 +529,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Items
         public int InsertItems(string name, int categoryid, string barcode, string description, decimal costprice, decimal unitprice, decimal reorderlevel, decimal defaulttax, int receivingquantity, int picid, string status, string custom1, string custom2, string custom3, string custom4, string custom5, string custom6, string custom7, string custom8, string custom9, string custom10)
         {
             int returnid = 0;
@@ -564,6 +577,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Item Taxes
         public int InsertItemTaxes(int itemid, string name, decimal percent)
         {
             int returnid = 0;
@@ -595,6 +609,7 @@ namespace RsmgrImporter
             return returnid;            
         }
 
+        // Ticket Items
         public int InsertTicketItems(int ticketid, int itemid, string description, string serialnumber, int line, decimal quantitypurchased, decimal itemcostprice, decimal itemunitprice, string status)
         {
             int returnid = 0;
@@ -632,6 +647,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Tickets
         public int InsertTicket(string starttime, string completetime, int customerid, int employeeid, string comment, string paymenttype, string invoicenumber)
         {
             int returnid = 0;
@@ -678,6 +694,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Ticket Item Taxes
         public int InsertTicketItemTaxes(int ticketid, int itemid, int line, string name, decimal percent)
         {
             int returnid = 0;
@@ -709,6 +726,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Ticket Payments
         public int InsertTicketPayments(int ticketid, string paymenttype, decimal paymentamount)
         {
             #region Declerations
@@ -740,6 +758,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Vendors
         public int InsertVendors(string name, string vendornumber, string phone, int addressid, int personid, string comments)
         {
             #region Declerations
@@ -775,6 +794,7 @@ namespace RsmgrImporter
             return returnid;
         }
 
+        // Transfers
         public int InsertTransfer(int itemid, int employeeid, string transdate, string comment, int departmentfromid, int departmenttoid, int completed)
         {
             #region Declerations
@@ -816,7 +836,6 @@ namespace RsmgrImporter
             }
             return returnid;
         }
-
 
         /// <summary>
         /// This works with stored procedures in order to produce deleted results

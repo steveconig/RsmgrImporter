@@ -211,7 +211,7 @@ namespace RsmgrImporter
             }
         }
 
-        public void ImportItems()
+        public void ImportItems(string storenumber)
         {
             //Inventory= Style, Color, Description, iSize, Season, Division, Department, Class, Barcode, Cost, Retail, Units, Branch, 
             //             0      1         2         3      4        5         6          7       8      9      10     11      12         
@@ -225,7 +225,7 @@ namespace RsmgrImporter
                 using (OleDbCommand cmd = new OleDbCommand("Select * FROM Inventory WHERE DateOrdered > @date AND Branch = @store", con))
                 {
                     cmd.Parameters.Add(new OleDbParameter("@date", OleDbType.Date)).Value = new DateTime(2014, 12, 31);
-                    cmd.Parameters.Add(new OleDbParameter("@store", OleDbType.VarChar)).Value = "4";
+                    cmd.Parameters.Add(new OleDbParameter("@store", OleDbType.VarChar)).Value = storenumber;
                     OleDbDataAdapter adapter = new OleDbDataAdapter(cmd); 
                     try
                     {
@@ -252,7 +252,6 @@ namespace RsmgrImporter
             string vendornumber = "";
             decimal cost = 0;
             decimal retail = 0;
-            
             #endregion
 
             try { intvalue = Convert.ToInt32(getter.GetAppConfig("EmpRowCount")); }

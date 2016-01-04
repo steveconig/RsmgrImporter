@@ -10,9 +10,12 @@ namespace RsmgrImporter
     /// </summary>
     public partial class ImportTextWindow : Window
     {
+        string writefile = System.AppDomain.CurrentDomain.BaseDirectory + @"output.txt"; // write to output.txt strings it cannot convert
+
         public ImportTextWindow()
         {
             InitializeComponent();
+            if (!File.Exists(writefile)) { File.Create(writefile); }
         }
         #region Class Declerations
         private string FilePath = null;
@@ -164,18 +167,25 @@ namespace RsmgrImporter
                 default:
                     PopUp popup = new PopUp("No Case for Items", text);
                     popup.Show();
-                    // write to log to be reimported.
+                    WriteToOutput(text);
                     break;
             }
+        }
 
-            
-            
-            
-
+        private void WriteToOutput(string text)
+        {
+            try { File.AppendAllText(writefile, text + "\n"); }
+            catch (Exception e)
+            {
+                PopUp popup = new PopUp("Importer Message", "Error writing to Output. " + e.Message);
+                popup.Show();
+            }
         }
 
         private void ParseDeletes(string text)
         {
+            // Find the matching string, if found delete items from SQL.
+            // If not found, then output the line into a text file.
             StringComparison comparer = StringComparison.InvariantCultureIgnoreCase;
             if (text.StartsWith("Delete * from Credits", comparer))
             {
@@ -190,10 +200,16 @@ namespace RsmgrImporter
             {
                 CountDelApp = CountDelApp + 1;
             }
+            else
+            {
+                WriteToOutput(text);
+            }
         }
         
         private void ParseInserts(string text)
         {
+            // Find the matching string, if found insert items from SQL.
+            // If not found, then output the line into a text file.
             StringComparison comparer = StringComparison.InvariantCultureIgnoreCase;
 
             if (text.StartsWith("Insert INTO Inventory2", comparer))
@@ -250,6 +266,10 @@ namespace RsmgrImporter
             {
                 CountInsOrderSpecs2 = CountInsOrderSpecs2 + 1;
             }
+            else
+            {
+                WriteToOutput(text);
+            }
         }
 
         private void ParseUpdates(string text)
@@ -287,6 +307,10 @@ namespace RsmgrImporter
             else if (text.StartsWith("Update Styles", comparer))
             {
                 CountUpdStyles = CountUpdStyles + 1;
+            }
+            else
+            {
+                WriteToOutput(text);
             }
         }
     }
