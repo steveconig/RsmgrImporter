@@ -84,21 +84,25 @@ namespace RsmgrImporter
         public int InsertPerson(string firstname, string lastname, int addressid, string gender, string homephone, string cellphone, string workphone, string faxnumber, string birthday, string email, string comments, string ssn, string status)
         {
             int returnid = 0;
+            DateTime bday = Convert.ToDateTime("01/01/1900");
+            if (gender != "M" || gender != "F") { gender = "U"; }  // gender check
+            if (birthday != null && birthday != "" && birthday.Length > 7) // birthday check
+            {
+                try { bday = Convert.ToDateTime(birthday); }
+                catch (Exception e)
+                {
+                    logging.writeToLog("Error: Convert Birthday string to date : " + e.Message + "; Value: " + birthday);
+                    bday = Convert.ToDateTime("01/01/1900");
+                }
+            }
+
+
             using (SqlConnection con = new SqlConnection(DBConLocal))
             {
                 using (SqlCommand cmd = new SqlCommand())
                 {
-                    DateTime bday = Convert.ToDateTime("01/01/1900");
-                    if (gender != "M" || gender != "F") { gender = "U"; }  // gender check
-                    if (birthday != null && birthday != "" && birthday.Length > 7) // birthday check
-                    {
-                        try { bday = Convert.ToDateTime(birthday); }
-                        catch (Exception e)
-                        {
-                            logging.writeToLog("Error: Convert Birthday string to date : " + e.Message + "; Value: " + birthday);
-                            bday = Convert.ToDateTime("01/01/1900");
-                        }
-                    }
+                    
+                    
 
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.CommandText = "spPersonNew";
@@ -370,7 +374,7 @@ namespace RsmgrImporter
         }
 
         // Inventory Log
-        public int InsertInventoryLog(int itemid, string actiontime, int departmentid, int employeeid)
+        public int InsertInventoryLog(int itemid, string actiontime, int departmentid, int employeeid, string transactiontext)
         {
             int returnid = 0;
 
@@ -388,11 +392,11 @@ namespace RsmgrImporter
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.CommandText = "spInventoryLogsNew";
                     cmd.Connection = con;
-
                     cmd.Parameters.Add("@itemid", SqlDbType.NVarChar).Value = itemid;
                     cmd.Parameters.Add("@actiontime", SqlDbType.DateTime).Value = atime;
                     cmd.Parameters.Add("@departmentid", SqlDbType.Int).Value = departmentid;
                     cmd.Parameters.Add("@employeeid", SqlDbType.Int).Value = employeeid;
+                    cmd.Parameters.Add("@transactiontext", SqlDbType.NVarChar).Value = transactiontext;
 
                     try
                     {
@@ -529,7 +533,31 @@ namespace RsmgrImporter
             return returnid;
         }
 
-        // Items
+        /// <summary>
+        ///  Insert item into SQL database.
+        /// </summary>
+        /// <param name="name">Item Name</param>
+        /// <param name="categoryid">ID from Category</param>
+        /// <param name="barcode">Item Barcode</param>
+        /// <param name="description">Item Description</param>
+        /// <param name="costprice">Cost of Item to Retail</param>
+        /// <param name="unitprice">Cost of item to Customer</param>
+        /// <param name="reorderlevel">Level to notify to reorder</param>
+        /// <param name="defaulttax">Default tax rate for item</param>
+        /// <param name="receivingquantity">Default quantity to recieve from vendor</param>
+        /// <param name="picid">Int ID of item picture</param>
+        /// <param name="status">Active / Inactive / Unknown</param>
+        /// <param name="custom1">Style</param>
+        /// <param name="custom2">Color</param>
+        /// <param name="custom3">Season</param>
+        /// <param name="custom4">Sizes</param>
+        /// <param name="custom5">iSizes</param>
+        /// <param name="custom6">not used</param>
+        /// <param name="custom7">not used</param>
+        /// <param name="custom8">Division</param>
+        /// <param name="custom9">Department</param>
+        /// <param name="custom10">Class</param>
+        /// <returns>Item ID of new SQL entry</returns>
         public int InsertItems(string name, int categoryid, string barcode, string description, decimal costprice, decimal unitprice, decimal reorderlevel, decimal defaulttax, int receivingquantity, int picid, string status, string custom1, string custom2, string custom3, string custom4, string custom5, string custom6, string custom7, string custom8, string custom9, string custom10)
         {
             int returnid = 0;
@@ -610,7 +638,7 @@ namespace RsmgrImporter
         }
 
         // Ticket Items
-        public int InsertTicketItems(int ticketid, int itemid, string description, string serialnumber, int line, decimal quantitypurchased, decimal itemcostprice, decimal itemunitprice, string status)
+        public int InsertTicketItems(int ticketid, int itemid, string description, string serialnumber, int line, decimal quantitypurchased, decimal itemcostprice, decimal itemunitprice, decimal discount, decimal discount2, string status)
         {
             int returnid = 0;
 
@@ -630,6 +658,8 @@ namespace RsmgrImporter
                     cmd.Parameters.Add("@quantitypurchased", SqlDbType.Decimal).Value = quantitypurchased;
                     cmd.Parameters.Add("@itemcostprice", SqlDbType.Decimal).Value = itemcostprice;
                     cmd.Parameters.Add("@itemunitprice", SqlDbType.Decimal).Value = itemunitprice;
+                    cmd.Parameters.Add("@discount", SqlDbType.Decimal).Value = discount;
+                    cmd.Parameters.Add("@discount2", SqlDbType.Decimal).Value = discount2;
                     cmd.Parameters.Add("@status", SqlDbType.NVarChar).Value = status;
 
                     try
@@ -666,7 +696,7 @@ namespace RsmgrImporter
 
             using (SqlConnection con = new SqlConnection(DBConLocal))
             {
-                using(SqlCommand cmd = new SqlCommand())
+                using (SqlCommand cmd = new SqlCommand())
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.CommandText = "spTicketNew";
@@ -690,7 +720,7 @@ namespace RsmgrImporter
                     }
                     con.Close();
                 }
-            }            
+            }
             return returnid;
         }
 
