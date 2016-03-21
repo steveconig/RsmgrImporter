@@ -33,7 +33,7 @@ namespace RsmgrImporter
 
         private void Text_Import_Click(object sender, RoutedEventArgs e)
         {
-            ImportTextWindow win1 = new ImportTextWindow();
+            ImportInventoryWindow win1 = new ImportInventoryWindow();
             win1.Show();
         }
 

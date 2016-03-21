@@ -10,8 +10,10 @@ namespace RsmgrImporter
         public Logger()
         {
             // if location not set then set default
-            if (!File.Exists(logs)) { File.Create(logs); }
-            if (!File.Exists(exports)) { File.Create(exports); }
+            if (!File.Exists(logname)) { File.Create(logname); }
+            if (!File.Exists(exportname)) { File.Create(exportname); }
+            if (!File.Exists(outputfile)) { File.Create(outputfile); }
+
             if (ConfigurationManager.AppSettings["logfilepath"] == null)
             {
                 AddUpdateAppSettings("logfilepath", "System.AppDomain.CurrentDomain.BaseDirectory");
@@ -20,6 +22,7 @@ namespace RsmgrImporter
 
         }
         
+        private static string outputfile = @"ImpInvMissed_" + DateTime.Now.ToString("yyyyMMdd") + ".txt";
         private static string logpath = ConfigurationManager.AppSettings["logfilepath"];
         private static string logname = @"rsmgr_log.txt";
         private static string logs = logpath + logname;
@@ -29,7 +32,7 @@ namespace RsmgrImporter
        
         public void writeToLog(string message)
         {
-            try { File.AppendAllText(logs, DateTime.Now.ToString() + " | " + message + "\n"); }
+            try { File.AppendAllText(logname, DateTime.Now.ToString() + " | " + message + Environment.NewLine); }
             catch(Exception e)
             {
                 PopUp popup = new PopUp("Importer Message", "Error writing to log. " + e.Message);
@@ -40,8 +43,18 @@ namespace RsmgrImporter
 
         public void writeToImports(string content)
         {
-            try { File.AppendAllText(exports,content); }
-            catch (Exception e) { writeToLog("Unable to Write to Imports. " + content + " : " + e.Message); }
+            try { File.AppendAllText(exportname, content + Environment.NewLine); }
+            catch (Exception e) { writeToLog("Unable to Write to Imports. " + content + " : " + e.Message + Environment.NewLine); }
+        }
+
+        public void WriteToOutput(string text)
+        {
+            try { File.AppendAllText(outputfile, text + Environment.NewLine); }
+            catch (Exception e)
+            {
+                PopUp popup = new PopUp("Importer Message", "Error writing to Output. " + e.Message);
+                popup.Show();
+            }
         }
 
         private string ReadSetting(string key) // Read from App.config

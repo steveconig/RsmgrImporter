@@ -59,14 +59,15 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BooleanToHiddenVisibility.cs" />
     <Compile Include="DatabaseImportWindow.xaml.cs">
       <DependentUpon>DatabaseImportWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="EndOfDayWindow.xaml.cs">
       <DependentUpon>EndOfDayWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ImportTextWindow.xaml.cs">
-      <DependentUpon>ImportTextWindow.xaml</DependentUpon>
+    <Compile Include="ImportInventoryWindow.xaml.cs">
+      <DependentUpon>ImportInventoryWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Logger.cs" />
     <Compile Include="PopUp.xaml.cs">
@@ -84,7 +85,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ImportTextWindow.xaml">
+    <Page Include="ImportInventoryWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

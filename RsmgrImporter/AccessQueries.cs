@@ -47,258 +47,400 @@ namespace RsmgrImporter
             }
         }
 
-        public void ImportCustomers()
+        /// <summary>
+        /// AccessDB = LastName, FirstName, Address, City, State, ZipCode, HomePhone, CellPhone, Email, Birthday, JoinDate, CustomerID, 
+        ///     ChargeCustomer, StoreNumber, SPECIAL, PAYMENTS, ACCTBAL, WORKPHN, Limit, SSN, SSN2
+        /// </summary>
+        /// <returns></returns>
+        public DataTable ImportCustomers()
+        {            
+            DataTable results = new DataTable();
+            using (OleDbConnection con = new OleDbConnection(AccessString))
+            {
+                using(OleDbCommand cmd = new OleDbCommand("Select * FROM Customers", con))
+                {
+                    using(OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                    {
+                        try
+                        {
+                            con.Open();
+                            adapter.Fill(results);
+                            con.Close();
+                        }
+                        catch (Exception e)
+                        {
+                            logging.writeToLog("Error: Connect to Access for Customers DB : " + e.Message);
+                        }
+                    }
+                    con.Close();
+                }
+            }
+            return results;
+        }
+
+        public DataTable ImportCustomers(string date)
         {
             //AccessDB = LastName, FirstName, Address, City, State, ZipCode, HomePhone, CellPhone, Email, Birthday, JoinDate, CustomerID, 
             //              0           1        2      3       4       5       6           7       8       9           10          11
             //ChargeCustomer, StoreNumber, SPECIAL, PAYMENTS, ACCTBAL, WORKPHN, Limit, SSN, SSN2
             //       12           13          14        15      16        17      18    19   20
-
-            int intcharge = 0;
-            int personid = 0;
-            int customerid = 0;
-            string strcharge = "";
-            decimal declimit = 0;
-            string strjoindate = "";
-            string strstore = "";
-            int intstore = 0;
-            decimal balance = 0;
-            int addressid = 0;
-            string custcount = "";
-
-            OleDbConnection con = new OleDbConnection(AccessString);
-            DataTable results = new DataTable();
-            OleDbCommand cmd = new OleDbCommand("Select * FROM Customers", con);
-            OleDbDataAdapter adapter = new OleDbDataAdapter(cmd); // DB Adapter for data transfer, Execute(cmd)
-            try
+            string query = "Select * FROM Customers WHERE JoinDate = '" + date + "'";
+            using (DataTable results = new DataTable())
             {
-                con.Open();
-                adapter.Fill(results);
-                con.Close();
-            }
-            catch (Exception e)
-            {
-                logging.writeToLog("Error: Connect to Access for Customers DB : " + e.Message);
-            }
-
-            SQLInsertStatements cimporter = new SQLInsertStatements();
-            SQLGetStatements cgetter = new SQLGetStatements();
-
-            int intvalue = 0;
-            try { intvalue = Convert.ToInt32(cgetter.GetAppConfig("CusRowCount")); }
-            catch (Exception e)
-            {
-                logging.writeToLog("Error: Convert CusRowCount to Int : " + e.Message);
-            }
-
-            if (results.Rows.Count != intvalue)
-            {
-                if (intvalue == 0)
+                using (OleDbConnection con = new OleDbConnection(AccessString))
                 {
-                    custcount = cimporter.InsertAppConfig("CusRowCount", results.Rows.Count.ToString());
-                }
-
-                foreach (DataRow row in results.Rows)
-                {
-                    strjoindate = row[10].ToString();
-                    strstore = row[11].ToString();
-                        // convert row12 string to int charge account
-                    strcharge = row[12].ToString().ToLower(); // convert to lowercase
-                    if (strcharge == "yes") { intcharge = 1; }  // convert string to int if "yes" 
-                        // convert row18 to charge limit
-                    if (row[18] == null) { declimit = 0; } else { 
-                        try { declimit = Convert.ToDecimal(row[18].ToString()); }
-                        catch(Exception e)
-                        {
-                            declimit = 0;
-                            logging.writeToLog("Error: Convert Customer.row18 to declimit : " + e.Message + "\n Value: " + row[18].ToString());
-                        }
-                    }
-                        // convert row16 to balance
-                    if (row[16] == null) { balance = 0; } else {
-                        try { balance = Convert.ToDecimal(row[16]); }
-                        catch(Exception e)
-                        {
-                            balance = 0;
-                            logging.writeToLog("Error: Convert Customer.row16 to balance : " + e.Message + "\n Value: " + row[16].ToString());
-                        }   
-                    }
-
-                    if (strjoindate.Length < 7) { strjoindate = ""; }
-
-                    if (strstore.Length > 1) { strstore.TrimStart('0'); }
-                    if (strstore == null || strstore == "") { strstore = "1"; }
-                    try { intstore = Convert.ToInt32(strstore); }
-                    catch (FormatException e)
+                    using (OleDbCommand cmd = new OleDbCommand(query, con))
                     {
-                        logging.writeToLog("Error: Convert Customer.strStore to intStore : " + e.Message + "\n String Value: " + strstore);
-                        intstore = 1;
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(results);
+                                con.Close();
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Connect to Access for Customers DB : " + e.Message);
+                            }
+                        }
+                        con.Close();
                     }
-
-                    addressid = cimporter.InsertAddress(row[2].ToString(), "", "", row[3].ToString(), row[4].ToString(), row[5].ToString(), "USA", "Imported from Access");
-                    personid = cimporter.InsertPerson(row[1].ToString(), row[0].ToString(), addressid, "", row[6].ToString(), row[7].ToString(), row[17].ToString(), "", row[9].ToString(), row[8].ToString(), "Imported from Access", "", "Active");
-                    customerid = cimporter.InsertCustomer(row[11].ToString(), personid, strjoindate, intcharge, declimit, 0, intstore, balance, 1);
                 }
+                return results;
+            }
+        }
 
-                try { results.Clear(); }
-                catch (Exception e)
+        /// <summary>
+        /// AccessDB = StoreName, StoreID
+        /// </summary>
+        public DataTable ImportDepartments()
+        {
+            string query = "Select * FROM Stores";
+            using (DataTable results = new DataTable())
+            {
+                using (OleDbConnection con = new OleDbConnection(AccessString))
                 {
-                    logging.writeToLog("Error: Clear Results Customer DataTable" + e.Message);
+                    using (OleDbCommand cmd = new OleDbCommand(query, con))
+                    {
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(results);
+                                con.Close();
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Connect to Access for ImportDepartments DB : " + e.Message);
+                            }
+                        }
+                        con.Close();
+                    }
                 }
+                return results;
             }
         }
 
-        public void ImportDepartments()
+        /// <summary>
+        /// Vendors = Vendor Name | Address | City | State | ZipCode | PhoneNumber | FaxNumber | Contact
+        /// </summary>
+        public DataTable ImportVendors()
         {
-            //AccessDB = StoreName, StoreID 
-            //               0         1  
-            int addressid = 0;
-            int departmentid = 0;
-
-            OleDbConnection conn = null;
-            DataTable results = new DataTable();
-            conn = new OleDbConnection(AccessString);
-            conn.Open();
-            OleDbCommand cmd = new OleDbCommand("Select * FROM Stores", conn);
-            OleDbDataAdapter adapter = new OleDbDataAdapter(cmd); // DB Adapter for data transfer, Execute(cmd)
-            adapter.Fill(results); // Fill (results) datatable with Adapter data.
-
-            foreach (DataRow row in results.Rows)
+            string query = "Select * FROM Vendors";
+            using (DataTable dt = new DataTable())
             {
-                SQLInsertStatements importer = new SQLInsertStatements();
-
-                // Insert into Address get ID
-                addressid = importer.InsertAddress("", "", "", "", "", "", "USA", "Imported from Access");
-                // Insert into Person get ID
-                departmentid = importer.InsertDepartment(row[0].ToString(), row[1].ToString(), addressid, "Imported from Access", "Active");
-            }
-
-            try { results.Clear(); }
-            catch (Exception e)
-            {
-                logging.writeToLog("Error: Clearing the results in Department of dataTable. " + e.Message);
+                using (OleDbConnection con = new OleDbConnection(AccessString))
+                {
+                    using (OleDbCommand cmd = new OleDbCommand(query, con))
+                    {
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(dt);
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Failed to execute Access ImportItems. " + e.Message);
+                            }
+                        }
+                        con.Close();
+                    }
+                }
+                return dt;
             }
         }
 
-        public void ImportVendors()
-        {   // Vendor Name , Address, City, State, ZipCode, PhoneNumber, FaxNumber, Contact
-            //   	0			1	   2      3       4          5           6        7
+        /// <summary>
+        ///  Inventory= Style | Color | Description | iSize | Season | Division | Department | Class | Barcode | Cost | Retail | Units | Branch 
+        ///    | DateOrdered | DateReceived | Vendor | Sizes | Ordered | Received | Sold | DateSold | Sales | Label
+        /// </summary>
+        /// <param name="storenumber"></param>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public DataTable GetItems(string storenumber, DateTime date)
+        {
+            string query = "Select * FROM Inventory WHERE DateOrdered > @date AND Branch = @store";
+            using (DataTable dt = new DataTable())
+            {
+                using (OleDbConnection con = new OleDbConnection(AccessString))
+                {
+                    using (OleDbCommand cmd = new OleDbCommand(query, con))
+                    {
+                        cmd.Parameters.Add(new OleDbParameter("@date", OleDbType.Date)).Value = date;
+                        cmd.Parameters.Add(new OleDbParameter("@store", OleDbType.VarChar)).Value = storenumber;
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(dt);
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Failed to execute Access ImportItems. " + e.Message);
+                            }
+                        }
+                        con.Close();
+                    }
+                }
+                return dt;
+            }
+        }
 
-            int addressid = 0;
-            int personid = 0;
-            int vendorid = 0;
+        /// <summary>
+        /// Get Items from Access Database where date = @date and branch = @store
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public DataTable GetItemsByDate(DateTime date, string store)
+        {
+            string query = "Select * FROM Inventory WHERE DateOrdered = @date AND Branch = @store";
+            using (DataTable dt = new DataTable())
+            {
+                using (OleDbConnection con = new OleDbConnection(AccessString))
+                {
+                    using (OleDbCommand cmd = new OleDbCommand(query, con))
+                    {
+                        cmd.Parameters.Add(new OleDbParameter("@date", OleDbType.Date)).Value = date;
+                        cmd.Parameters.Add(new OleDbParameter("@store", OleDbType.VarChar)).Value = store;
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(dt);
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Failed to execute Access ImportItems. " + e.Message);
+                            }
+                        }
+                        con.Close();
+                    }
+                }
+                return dt;
+            }
+        }
 
-            OleDbConnection con = null;
+        /// <summary>
+        /// Tickets =>   Date | TicketNumber | Total | Payment | Customer | Employee
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        public DataTable ImportTickets(DateTime date)
+        {
             DataTable dt = new DataTable();
-            con = new OleDbConnection(AccessString);
-            con.Open();
-            OleDbCommand cmd = new OleDbCommand("Select * FROM Vendors", con);
-            OleDbDataAdapter adapter = new OleDbDataAdapter(cmd); // DB Adapter for data transfer, Execute(cmd)
-            adapter.Fill(dt); // Fill (results) datatable with Adapter data.
-            SQLInsertStatements importer = new SQLInsertStatements();
-
-            foreach (DataRow row in dt.Rows)
-            {
-                addressid = importer.InsertAddress(row[2].ToString(), "", "", row[3].ToString(), row[4].ToString(), row[5].ToString(), "USA", "Imported from Access");
-                personid = importer.InsertPerson(row[7].ToString(), "", addressid, "", "", "", "", "", "", "", "", "", "Active");
-                vendorid = importer.InsertVendors(row[0].ToString(), row[1].ToString(), row[6].ToString(), addressid, personid, "Imported from Access");
-            }
-
-            try { dt.Clear(); }
-            catch (Exception e)
-            {
-                logging.writeToLog("Error: Clear Results Vendors DataTable : " + e.Message);
-            }
-        }
-
-        public void ImportItems(string storenumber)
-        {
-            //Inventory= Style, Color, Description, iSize, Season, Division, Department, Class, Barcode, Cost, Retail, Units, Branch, 
-            //             0      1         2         3      4        5         6          7       8      9      10     11      12         
-            //          DateOrdered, DateReceived, Vendor, Sizes, Ordered, Received, Sold, DateSold, Sales, Label
-            //              13           14         15      16      17         18     19      20      21     22
-            //Styles =  Vendor, VendorName, Season, Style, Color, Description, Sizes, Division, Department, Class, Cost, Retail
-            //            0         1          2      3      4         5         6       7          8         9     10     11
-            #region Access Connection
+            string query = "Select * FROM Tickets WHERE Date = '" + date + "'";
             using (OleDbConnection con = new OleDbConnection(AccessString))
             {
-                using (OleDbCommand cmd = new OleDbCommand("Select * FROM Inventory WHERE DateOrdered > @date AND Branch = @store", con))
+                using (OleDbCommand cmd = new OleDbCommand(query, con))
                 {
-                    cmd.Parameters.Add(new OleDbParameter("@date", OleDbType.Date)).Value = new DateTime(2014, 12, 31);
-                    cmd.Parameters.Add(new OleDbParameter("@store", OleDbType.VarChar)).Value = storenumber;
-                    OleDbDataAdapter adapter = new OleDbDataAdapter(cmd); 
-                    try
+                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
                     {
-                        con.Open();
-                        adapter.Fill(res);
-                    }
-                    catch (Exception e)
-                    {
-                        logging.writeToLog("Error: Failed to execute Access ImportItems. " + e.Message);
+                        try
+                        {
+                            con.Open();
+                            adapter.Fill(dt);
+                        }
+                        catch (Exception e)
+                        {
+                            logging.writeToLog("Error: Failed to execute Access ImportTickets. " + e.Message);
+                        }
                     }
                     con.Close();
                 }
             }
-            #endregion
-            #region Declerations
-            SQLInsertStatements importer = new SQLInsertStatements();
-            SQLGetStatements getter = new SQLGetStatements();
-            int intvalue = 0;
-            int vendorid = 0;
-            int invoiceid = 0;
-            int invoiceitemid = 0;
-            int itemid = 0;
-            string invoicenum = "";
-            string vendornumber = "";
-            decimal cost = 0;
-            decimal retail = 0;
-            #endregion
+            return dt;
 
-            try { intvalue = Convert.ToInt32(getter.GetAppConfig("EmpRowCount")); }
-            catch (Exception e) { logging.writeToLog("Error: Convert EmpRowCount to Int. " + e.Message); }
+        }
 
-            if (res.Rows.Count != intvalue)
+        /// <summary>
+        /// Tickets =>   Date | TicketNumber | Total | Payment | Customer | Employee
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns>DataTable of Tickets</returns>
+        public DataTable GetTicketsByDate(string date)
+        {
+            DataTable dt = new DataTable();
+            string query = "Select * FROM Tickets WHERE Date = '" + date + "'";
+            using (OleDbConnection con = new OleDbConnection(AccessString))
             {
-                importer.InsertAppConfig("EmpRowCount", res.Rows.Count.ToString());
-
-                foreach (DataRow row in res.Rows)
+                using (OleDbCommand cmd = new OleDbCommand(query, con))
                 {
-                    vendornumber = row[15].ToString();
-                    if (row[9] == null) { cost = 0; } //row9 to cost
-                    else
+                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
                     {
-                        try { cost = Convert.ToDecimal(row[9]); }
+                        try
+                        {
+                            con.Open();
+                            adapter.Fill(dt);
+                        }
                         catch (Exception e)
-                        { logging.writeToLog("Error: Convert Items.row9: " + row[9].ToString() + " to cost failed. " + e.Message); }
+                        {
+                            logging.writeToLog("Error: Failed to execute Access ImportTickets. " + e.Message);
+                        }
                     }
-                    if (row[10] == null) { cost = 0; }
-                    else
-                    {
-                        try { retail = Convert.ToDecimal(row[10]); }
-                        catch (Exception e)
-                        { logging.writeToLog("Error: Convert Customer.row10: " + row[10].ToString() + " to retail failed. " + e.Message); }
-                    }
-                    try { vendorid = getter.GetVendorID(vendornumber); }
-                    catch(Exception e) { logging.writeToLog("Warning: Unable to retrieve VendorID from ImportItems : " + e.Message); }
-                    if (vendorid < 1) { vendorid = 1; }
-                    try { invoiceid = getter.GetInvoiceIDforImports(vendorid); }
-                    catch(Exception e) { logging.writeToLog("Warning: Unable to retrieve InvoiceID from ImportItems : " + e.Message); }
-                    if (invoiceid < 1)
-                    {
-                        invoicenum = "X" + vendornumber + "X";
-                        invoiceid = importer.InsertInvoices(invoicenum, row[13].ToString(), row[14].ToString(), vendorid, 1, "Created by System", "none");
-                    }
-                    itemid = importer.InsertItems(row[0].ToString(), 1, row[8].ToString(), row[2].ToString(), cost, retail, 0, 0, 0, 1, "Active", row[0].ToString(), row[1].ToString(), row[4].ToString(), row[16].ToString(), row[3].ToString(), "", "", row[5].ToString(), row[6].ToString(), row[7].ToString());
-                    // insert invoice items using itemid and vendorid.
-                    invoiceitemid = importer.InsertInvoiceItems(invoiceid, itemid, "Created by System", "", 0, 0, 0, 0, 0, 1, 0);
+                    con.Close();
                 }
-
-                try { res.Clear(); }
-                catch (DataException e)
-                {
-                    logging.writeToLog("Error: Clear Results Items DataTable" + e.Message);
-                }
+                return dt;
             }
         }
+
+        /// <summary>
+        /// Sales => Barcode | Style | Color | Description | Size | Vendor | PurchaseDate | Cost | Retail | Discount | SalePrice | CustomerID | EmployeeID | TicketInfo | TicketNumber | Branch |  Discount2
+        /// </summary>
+        /// <param name="TicketNumber">Ticket Number</param>
+        /// <returns>List of sales by ticket number.</returns>
+        public DataTable ImportSalesByTicket(string ticketNumber)
+        {
+            using (DataTable dt = new DataTable())
+            {
+                using (OleDbConnection con = new OleDbConnection(AccessString))
+                {
+                    using (OleDbCommand cmd = new OleDbCommand("Select * FROM Sales WHERE TicketNumber = @ticketnumber", con))
+                    {
+                        cmd.Parameters.Add(new OleDbParameter("@ticketnumber", OleDbType.VarWChar)).Value = ticketNumber;
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(dt);
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Failed to execute Access ImportSalesByTickets. " + e.Message);
+                            }
+                        }
+                        con.Close();
+                    }
+                }
+                return dt;
+            }
+        }
+
+        /// <summary>
+        /// Sales => Barcode | Style | Color | Description | Size | Vendor | PurchaseDate | Cost | Retail | Discount | SalePrice | CustomerID | EmployeeID | TicketInfo | TicketNumber | Branch |  Discount2
+        /// </summary>
+        /// <param name="ticketnumber"></param>
+        /// <returns>DataTable</returns>
+        public DataTable ImportSales(string ticketnumber)
+        {
+            string query = "Select * FROM Sales WHERE TicketNumber > " + @ticketnumber;
+            using (DataTable dt = new DataTable())
+            {
+                using (OleDbConnection con = new OleDbConnection(AccessString))
+                {
+                    using (OleDbCommand cmd = new OleDbCommand(query, con))
+                    {
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(dt);
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Failed to execute Access ImportSales. " + e.Message);
+                            }
+                        }
+                        con.Close();
+                    }
+                }
+                return dt;
+            }
+        }
+
+        /// <summary>
+        /// Sales => Barcode | Style | Color | Description | Size | Vendor | PurchaseDate | Cost | Retail | Discount | SalePrice | CustomerID | EmployeeID | TicketInfo | TicketNumber | Branch |  Discount2
+        /// </summary>
+        /// <param name="ticketnumber"></param>
+        /// <returns></returns>
+        public DataTable GetSalesByTicket(string ticketnumber)
+        {
+            string query = "Select * FROM Sales WHERE TicketNumber = @ticketnumber";
+            using (DataTable dt = new DataTable())
+            {
+                using (OleDbConnection con = new OleDbConnection(AccessString))
+                {
+                    using (OleDbCommand cmd = new OleDbCommand(query, con))
+                    {
+                        cmd.Parameters.Add(new OleDbParameter("@ticketnumber", OleDbType.Date)).Value = ticketnumber;
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(dt);
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Failed to execute Access ImportSales. " + e.Message);
+                            }
+                        }
+                        con.Close();
+                    }
+                }
+                return dt;
+            }
+        }
+
+        /// <summary>
+        /// ChargeCustomers => CustomerID | Limit | PreviousBalance | ChargeDate | PayDate | MonthsBalance | TotalBalance | Charges | Payments
+        /// </summary>
+        /// <returns>DataTable</returns>
+        public DataTable ImportChargeCustomers()
+        {
+            using (DataTable results = new DataTable())
+            {
+                using (OleDbConnection con = new OleDbConnection(AccessString))
+                {
+                    using (OleDbCommand cmd = new OleDbCommand("Select * FROM ChargeCustomers", con))
+                    {
+                        using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                        {
+                            try
+                            {
+                                con.Open();
+                                adapter.Fill(results);
+                                con.Close();
+                            }
+                            catch (Exception e)
+                            {
+                                logging.writeToLog("Error: Connect to Access for ChargeCustomers DB : " + e.Message);
+                            }
+                        }
+                        con.Close();
+                    }
+                }
+                return results;
+            }
+        }
+
+
     }
 }
