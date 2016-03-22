@@ -479,11 +479,8 @@ namespace RsmgrImporter
                         itemqty = Convert.ToInt16(quantity);
                         su.SQLItemQuantityUpdateQty(itemid, departmentid, itemqty, "Changed by TicketInserts");
                     }
-                }
-                
-                
+                }   
             }
-
         }
 
         private void VendorImport(DataTable results)
