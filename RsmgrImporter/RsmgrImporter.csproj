@@ -60,6 +60,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="BooleanToHiddenVisibility.cs" />
+    <Compile Include="Conversions.cs" />
+    <Compile Include="Customers.cs" />
     <Compile Include="DatabaseImportWindow.xaml.cs">
       <DependentUpon>DatabaseImportWindow.xaml</DependentUpon>
     </Compile>
@@ -73,10 +75,11 @@
     <Compile Include="PopUp.xaml.cs">
       <DependentUpon>PopUp.xaml</DependentUpon>
     </Compile>
-    <Compile Include="SQLGetStatements.cs" />
-    <Compile Include="SQLInsertStatements.cs" />
-    <Compile Include="SQLUpdateStatements.cs" />
+    <Compile Include="SQLInserts.cs" />
+    <Compile Include="SQLSelects.cs" />
+    <Compile Include="SQLUpdates.cs" />
     <Compile Include="TextImporter.cs" />
+    <Compile Include="Tickets.cs" />
     <Page Include="DatabaseImportWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

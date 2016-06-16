@@ -23,12 +23,13 @@ namespace RsmgrImporter
     {
         #region Declerations
         private Logger logging = new Logger();
-        SQLInsertStatements si = new SQLInsertStatements();
-        SQLGetStatements ss = new SQLGetStatements();
-        SQLUpdateStatements su = new SQLUpdateStatements();
+        SQLInserts si = new SQLInserts();
+        SQLSelects ss = new SQLSelects();
+        SQLUpdates su = new SQLUpdates();
         AccessQueries accquer = new AccessQueries();
         private Conversions conv = new Conversions();
         private string eargs = "";
+        private const string defaultStoreID = "11111111-0111-1000-1000-000011112222";
         #endregion
 
         public DatabaseImportWindow()
@@ -40,14 +41,14 @@ namespace RsmgrImporter
         {
 
             AccessQueries accquer = new AccessQueries();
-            txtDBSyncStatus.Text = "";
+            //txtDBSyncStatus.Text = "";
 
             if (cbStores.IsChecked.Value == true)
             {
                 DataTable dt = new DataTable();
                 accquer.ImportDepartments();
-                txtDBSyncStatus.Text += "Stores Imported...\n";
-                int addressid = 0, departmentid = 0;
+                //txtDBSyncStatus.Text += "Stores Imported...\n";
+                string addressid = "", departmentid = "";
 
                 foreach (DataRow row in dt.Rows)
                 {
@@ -66,7 +67,7 @@ namespace RsmgrImporter
             if (cbEmployees.IsChecked.Value == true)
             {
                 accquer.ImportEmployees();  // Import Employees
-                txtDBSyncStatus.Text += "Employees Imported...\n";
+                //txtDBSyncStatus.Text += "Employees Imported...\n";
             }
 
             if (cbCustomers.IsChecked.Value == true)
@@ -74,22 +75,23 @@ namespace RsmgrImporter
                 DataTable dt = new DataTable();
                 dt = accquer.ImportCustomers();
                 Customers(dt);
-                txtDBSyncStatus.Text += "Customers Imported...\n";
+                //txtDBSyncStatus.Text += "Customers Imported...\n";
             }
             if (cbVendors.IsChecked.Value == true)
             {
                 DataTable dt = new DataTable();
                 eargs = eargs + "vendors ";
-                txtDBSyncStatus.Text += "Vendors Imported...\n"; // Import Vendors
+                //txtDBSyncStatus.Text += "Vendors Imported...\n"; // Import Vendors
                 dt = accquer.ImportVendors();
+                VendorImport(dt);
 
             }
             if (cbCategories.IsChecked.Value == true)
             {
-                txtDBSyncStatus.Text += "Seasons Imported...\n";
-                txtDBSyncStatus.Text += "Sizes Imported...\n";
-                txtDBSyncStatus.Text += "Divisions Imported...\n"; // Import Divisions
-                txtDBSyncStatus.Text += "Classes Imported...\n"; // Import Classes
+                //txtDBSyncStatus.Text += "Seasons Imported...\n";
+                //txtDBSyncStatus.Text += "Sizes Imported...\n";
+                //txtDBSyncStatus.Text += "Divisions Imported...\n"; // Import Divisions
+                //txtDBSyncStatus.Text += "Classes Imported...\n"; // Import Classes
                 // TODO: import categories
             }
             if (cbItems.IsChecked.Value == true) // Import Items
@@ -110,7 +112,7 @@ namespace RsmgrImporter
                 for (var dte = start; dte <= end; dte = dte.AddDays(1))
                 {
                     // Insert into tickets, ticket_items and ticket_payments
-                    tickets = accquer.GetTicketsByDate(dte.Date.ToString());
+                    tickets = accquer.GetTicketsByDate(dte.ToString("MM/dd/yyyy"));
                     Tickets(tickets);
                     tickets.Clear();
                 }
@@ -136,11 +138,15 @@ namespace RsmgrImporter
 
         private void btnDeltaSync_Click(object sender, RoutedEventArgs e)
         {
+
+            AccessQueries accquer = new AccessQueries();
+            //txtDBSyncStatus.Text = "";
             DateTime end = DateTime.Now; DateTime start = new DateTime();
             string gac = "", writedate = end.ToString("MM/dd/yyyy"), storenum = "";
             string query = "SELECT TOP 1 * FROM app_config WHERE ukey = 'previous_sync'";
 
-            if (ss.IfExists(query)) { // if previuos_sync exists in database
+            if (ss.IfExists(query))
+            { // if previuos_sync exists in database
                 gac = ss.GetAppConfig("previous_sync");
             }
             else {
@@ -150,54 +156,92 @@ namespace RsmgrImporter
 
             // converts string gac to DateTime start
             start = conv.ConvertToDate(gac, -7);
-                
-            DataTable items = new DataTable();
-            DataTable tickets = new DataTable();
-            DataTable customers = new DataTable();
-            DataTable chargecustomers = new DataTable();
 
-            // Iterate throught he list and do the following:
-            for (var dt = start; dt <= end; dt = dt.AddDays(1))
+
+            if (cbStores.IsChecked.Value == true)
             {
-                // Import Customers and ChargeCustomers by joindate from previous_import -> now.
-                customers = accquer.ImportCustomers(dt.ToString());
-                foreach (DataRow row in customers.Rows)
-                {
-
-                }
-                customers.Clear();
-
-                // Import items
-                items = accquer.GetItems(storenum, dt);
-                foreach (DataRow row in items.Rows)
-                {
-                    // look for new items where date received is today
-                    // input the information into the database
-                }
-                items.Clear();
-
-
-                // Import tickets from date
-                tickets = accquer.GetTicketsByDate(dt.ToString("MM/dd/yyyy"));
-                SyncTickets(tickets, dt.Date);
-                tickets.Clear();
+                
             }
+            if (cbEmployees.IsChecked.Value == true)
+            {
+                
+            }
+            if (cbCustomers.IsChecked.Value == true)
+            {
+                DataTable customers = new DataTable();
+                DataTable chargecustomers = new DataTable();
+                // TODO: Get Acct Balances to show up
+                // Access Query => Field<decimal>("ACCTBAL")
+                // Iterate throught he list and do the following:
+                for (var dte = start; dte <= end; dte = dte.AddDays(1))
+                {
+                    // Check to see if customer exists in the table
+                    // Import Customers and ChargeCustomers by joindate from previous_import -> now.
+                    customers = accquer.ImportCustomers(dte.ToString());
+                    foreach (DataRow row in customers.Rows)
+                    {
 
-            su.SQLUpdateAppConfig("previous_sync", writedate);
+                    }
+                    customers.Clear();
+                }
+            }
+            if (cbVendors.IsChecked.Value == true)
+            {
+                
+
+            }
+            if (cbCategories.IsChecked.Value == true)
+            {
+                
+            }
+            if (cbItems.IsChecked.Value == true)
+            {
+                DataTable items = new DataTable();
+                // Import items
+                for (var dt = start; dt <= end; dt = dt.AddDays(1))
+                {
+                    items = accquer.GetItems(storenum, dt);
+                    foreach (DataRow row in items.Rows)
+                    {
+                        // look for new items where date received is today
+                        // input the information into the database
+                    }
+                    items.Clear();
+                }
+                
+            }
+            if (cbTickets.IsChecked.Value == true) // Import tickets from date
+            {
+                DataTable tickets = new DataTable();
+                for (var dt = start; dt <= end; dt = dt.AddDays(1))
+                {
+                    tickets = accquer.GetTicketsByDate(dt.ToString("MM/dd/yyyy"));
+                    SyncTickets(tickets, dt.Date);
+                    tickets.Clear();
+                }
+            }
+            
+            su.UpdateAppConfig("previous_sync", writedate);
         }
+            
+
 
         private void Items()
         {
             AccessQueries accquer = new AccessQueries();
             DataTable dt1 = new DataTable();
             DateTime itemdate = DateTime.Now.AddYears(-3);
-            int vendorid = 0, invoiceid = 0, invoiceitemid = 0, itemid = 0, quantityid = 0, departmentid = 0, units = 0;
+            string vendorid = "", invoiceid = "", invoiceitemid = "", itemid = "", quantityid = "", departmentid = "";
+            int units = 0;
             string invoicenum = "";
             string vendornumber = "";
             decimal cost = 0;
             decimal retail = 0;
 
-            if (dpItemDate.Text != null || dpItemDate.Text != "") { itemdate = conv.ConvertToDate(dpItemDate.Text, 0); } // TODO: Validate if it is an actual date.  Change to DatePicker.
+            if (dpItemDate.Text != null || dpItemDate.Text != "")
+            {
+                itemdate = conv.ConvertToDate(dpItemDate.Text, -1095);
+            } // TODO: Validate if it is an actual date.  Change to DatePicker.
 
             // 1 = Paragould, 2 = Jackson, 4 = Jonesboro
             if (tbDeptNum.Text == "1" || tbDeptNum.Text == "2" || tbDeptNum.Text == "4") 
@@ -227,22 +271,31 @@ namespace RsmgrImporter
 
                     try { vendorid = ss.GetVendorID(vendornumber); }
                     catch (Exception) { logging.writeToLog("Warning: Unable to retrieve VendorID = " + vendornumber + " from ImportItems. "); }
-                    if (vendorid < 1) { vendorid = 1; }
+                    if (vendorid == "" || vendorid == null) { vendorid = "1"; }
 
                     try { invoiceid = ss.GetInvoiceIDforImports(vendorid); }
                     catch (Exception) { logging.writeToLog("Warning: Unable to retrieve InvoiceID = " + vendorid.ToString() + " from ImportItems."); }
 
-                    if (invoiceid < 1) {
+                    if (invoiceid == "" || invoiceid == null) {
                         invoicenum = "X" + vendornumber + "X";
-                        invoiceid = si.InsertInvoices(invoicenum, row[13].ToString(), row[14].ToString(), vendorid, 1, "Created by System", "none"); // Invoices
+                        invoiceid = si.InsertInvoices(invoicenum, row[13].ToString(), row[14].ToString(), vendorid, "22331111-0111-1000-1000-000011112222", "Created by System", "none"); // Invoices
                     }
 
-                    itemid = si.InsertItems(row[0].ToString(), 1, row[8].ToString(), row[2].ToString(), cost, retail, 0, 0, 0, 1, "Active", row[0].ToString(), row[1].ToString(), row[4].ToString(), row[16].ToString(), row[3].ToString(), "", "", row[5].ToString(), row[6].ToString(), row[7].ToString()); // Items
+                    itemid = si.InsertItems(row[0].ToString(), "44441111-0111-1000-1000-000011112222", row[8].ToString(), row[2].ToString(), cost, retail, 0, 0, 0, "", "Active", row[0].ToString(), row[1].ToString(), row[4].ToString(), row[16].ToString(), row[3].ToString(), "", "", row[5].ToString(), row[6].ToString(), row[7].ToString()); // Items
 
-                    departmentid = ss.GetDepartmentID(tbDeptNum.Text); // TODO: Add this to a list and search the list for quicker results.
+                    DataTable dt2 = ss.GetDepartmentByDeptNum(tbDeptNum.Text);
+                    try
+                    {
+                        departmentid = dt2.Rows[0].Field<string>("id");
+                    }
+                    catch (Exception)
+                    {
+                        departmentid = "11111111-0111-1000-1000-000011112222";
+                    }
+                     // TODO: Add this to a list and search the list for quicker results.
                     // Find the date of the item and retrieve the invoiceid
                     // Insert invoice with datetime
-                    invoiceitemid = si.InsertInvoiceItems(invoiceid, itemid, "Created by System", "", 0, 0, 0, 0, 0, 1, 0); // Invoice Items
+                    invoiceitemid = si.InsertInvoiceItems(invoiceid, itemid, "Created by System", "", 0, 0, 0, 0, 0, departmentid, 0); // Invoice Items
                     quantityid = si.InsertItemQuantities(itemid, departmentid, units, "Inserted by System"); // Insert into ItemQuantities
                 }
 
@@ -256,8 +309,8 @@ namespace RsmgrImporter
         private void Customers(DataTable results)
         {
 
-            int intcharge = 0, personid = 0, customerid = 0, intstore = 0, addressid = 0, intvalue = 0;
-            string strcharge = "", strjoindate = "", strstore = "", custcount = "";
+            int intcharge = 0, intvalue = 0;
+            string strcharge = "", strjoindate = "", strstore = "", custcount = "", addressid = "", personid = "", customerid = "", intstore = "";
             decimal declimit = 0, balance = 0;
 
             intvalue = conv.ConvertToInt(ss.GetAppConfig("CusRowCount"));
@@ -290,18 +343,10 @@ namespace RsmgrImporter
                     // convert row16 to balance
                     if (row[16] == null) { balance = 0; }
                     else { conv.ConvertToDecimal(row[16].ToString()); }
-
                     if (strjoindate.Length < 7) { strjoindate = ""; }
-
                     if (strstore.Length > 1) { strstore.TrimStart('0'); }
-                    if (strstore == null || strstore == "") { strstore = "1"; }
-                    try { intstore = Convert.ToInt32(strstore); }
-                    catch (FormatException e)
-                    {
-                        logging.writeToLog("Error: Convert Customer.strStore to intStore : " + e.Message + "\n String Value: " + strstore);
-                        intstore = 1;
-                    }
-
+                    if (strstore == null || strstore == "") { strstore = "11111111-0111-1000-1000-000011112222"; }
+                    
                     addressid = si.InsertAddress(row[2].ToString(), "", "", row[3].ToString(), row[4].ToString(), row[5].ToString(), "USA", "Imported from Access");
                     personid = si.InsertPerson(row[1].ToString(), row[0].ToString(), addressid, "", row[6].ToString(), row[7].ToString(), row[17].ToString(), "", row[9].ToString(), row[8].ToString(), "Imported from Access", "", "Active");
                     customerid = si.InsertCustomer(row[11].ToString(), personid, strjoindate, intcharge, declimit, 0, intstore, balance, 1);
@@ -325,8 +370,8 @@ namespace RsmgrImporter
         private void SyncCustomers(DataTable results)
         {
             // declerations
-            int intcharge = 0, personid = 0, customerid = 0, intstore = 0, addressid = 0;
-            string strcharge = "", strjoindate = "", strstore = "";
+            int intcharge = 0;
+            string strcharge = "", strjoindate = "", strstore = "", addressid = "", customerid = "", personid = "", storeid = "";
             decimal declimit = 0, balance = 0;
 
             // check the count vs the value from app_config, if they don't equal then 
@@ -368,17 +413,11 @@ namespace RsmgrImporter
                     if (strjoindate.Length < 7) { strjoindate = ""; }
 
                     if (strstore.Length > 1) { strstore.TrimStart('0'); }
-                    if (strstore == null || strstore == "") { strstore = "1"; }
-                    try { intstore = Convert.ToInt32(strstore); }
-                    catch (FormatException e)
-                    {
-                        logging.writeToLog("Error: Convert Customer.strStore to intStore : " + e.Message + "\n String Value: " + strstore);
-                        intstore = 1; 
-                    }
-
+                    if (strstore == null || strstore == "") { strstore = defaultStoreID; }
+                    
                     addressid = si.InsertAddress(row[2].ToString(), "", "", row[3].ToString(), row[4].ToString(), row[5].ToString(), "USA", "Imported from Access");
                     personid = si.InsertPerson(row[1].ToString(), row[0].ToString(), addressid, "", row[6].ToString(), row[7].ToString(), row[17].ToString(), "", row[9].ToString(), row[8].ToString(), "Imported from Access", "", "Active");
-                    customerid = si.InsertCustomer(row[11].ToString(), personid, strjoindate, intcharge, declimit, 0, intstore, balance, 1);
+                    customerid = si.InsertCustomer(row[11].ToString(), personid, strjoindate, intcharge, declimit, 0, storeid, balance, 1);
 
                 }
             }
@@ -448,8 +487,11 @@ namespace RsmgrImporter
 
                     // Insert into SQL => tickets
                     ticketid = si.InsertTicket(date, date, customerid, employeeid, "Imported from Acccess database.", paymenttype, ticketnumber);
+                    // Insert TicketPayments => SQL
                     si.InsertTicketPayments(ticketid, paymenttype, total); // inserted into SQL => ticket_payments
-                    ticketitems = accquer.ImportSalesByTicket(ticketnumber); // Import ticket items into database                    
+                    // Get TicketItems <= Access
+                    ticketitems = accquer.ImportSalesByTicket(ticketnumber); // Import ticket items into database  
+                    // line                  
                     int line = 1;
                     // Sales => Barcode, Style, Color, Description, Size, Vendor, PurchaseDate, Cost, Retail, Discount, SalePrice, CustomerID, EmployeeID, TicketInfo, TicketNumber, Branch, Discount2
                     foreach (DataRow rown in ticketitems.Rows)  
@@ -549,8 +591,11 @@ namespace RsmgrImporter
                 }
                 else
                 {
+                    // Inserts the Ticket into SQL
                     ticketid = si.InsertTicket(sdate.ToString(), sdate.ToString(), customerid, employeeid, comments, paymenttype, ticketnumber);
+                    // Inserts the Ticket_Payments into SQL
                     ticketpaymentid = si.InsertTicketPayments(ticketid, paymenttype, total);
+                    // Gets the TicketItems from Access Database
                     ticitems = accquer.ImportSalesByTicket(ticketnumber);
                     line = 0;
                     foreach (DataRow item in ticitems.Rows) {
@@ -604,6 +649,26 @@ namespace RsmgrImporter
                 // TODO: foreach item that was purchased on date insert into Items Table in SQL.
             }
             dtitem.Clear();
+        }
+
+        private void btnSyncBalances_Click(object sender, RoutedEventArgs e)
+        {
+            string fn, ln;
+            string id = "";
+            decimal bal = 0;
+
+            DataTable cust = new DataTable();
+            cust = accquer.ImportCustomersWithBalance();
+            foreach (DataRow customer in cust.Rows)
+            {
+                fn = customer.Field<string>("FirstName");//[1].ToString();
+                ln = customer.Field<string>("LastName");//[0].ToString();
+                bal = conv.ConvertToDecimal(customer[16].ToString()); //.Field<decimal>("ACCTBAL") conv.ConvertToDecimal()
+                id = ss.GetCustomerIDByName(fn, ln);
+
+                su.UpdateCustomerBalance(id, bal);
+            }
+            cust.Clear();
         }
     }
 }

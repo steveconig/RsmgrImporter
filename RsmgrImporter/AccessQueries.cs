@@ -78,6 +78,38 @@ namespace RsmgrImporter
             return results;
         }
 
+        public DataTable ImportCustomersWithBalance()
+        {
+            DataTable results = new DataTable();
+            using (OleDbConnection con = new OleDbConnection(AccessString))
+            {
+                using (OleDbCommand cmd = new OleDbCommand("Select * FROM Customers WHERE ACCTBAL > 0", con))
+                {
+                    using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
+                    {
+                        try
+                        {
+                            con.Open();
+                            adapter.Fill(results);
+                            con.Close();
+                        }
+                        catch (Exception e)
+                        {
+                            logging.writeToLog("Error: Connect to Access for Customers DB : " + e.Message);
+                        }
+                    }
+                    con.Close();
+                }
+            }
+            return results;
+        }
+
+        /// <summary>
+        /// AccessDB = LastName, FirstName, Address, City, State, ZipCode, HomePhone, CellPhone, Email, Birthday, JoinDate, CustomerID, 
+        ///     ChargeCustomer, StoreNumber, SPECIAL, PAYMENTS, ACCTBAL, WORKPHN, Limit, SSN, SSN2
+        /// </summary>
+        /// <param name="date">string date</param>
+        /// <returns></returns>
         public DataTable ImportCustomers(string date)
         {
             //AccessDB = LastName, FirstName, Address, City, State, ZipCode, HomePhone, CellPhone, Email, Birthday, JoinDate, CustomerID, 
@@ -183,15 +215,16 @@ namespace RsmgrImporter
         /// <returns></returns>
         public DataTable GetItems(string storenumber, DateTime date)
         {
-            string query = "Select * FROM Inventory WHERE DateOrdered > @date AND Branch = @store";
+            string query = "Select * FROM Inventory WHERE DateOrdered > #01/01/2013# AND Branch = '" + storenumber + "'";
             using (DataTable dt = new DataTable())
             {
                 using (OleDbConnection con = new OleDbConnection(AccessString))
                 {
                     using (OleDbCommand cmd = new OleDbCommand(query, con))
                     {
-                        cmd.Parameters.Add(new OleDbParameter("@date", OleDbType.Date)).Value = date;
-                        cmd.Parameters.Add(new OleDbParameter("@store", OleDbType.VarChar)).Value = storenumber;
+                        date = new DateTime(2013, 01, 01).Date;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@date", date);
                         using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
                         {
                             try
@@ -218,15 +251,13 @@ namespace RsmgrImporter
         /// <returns></returns>
         public DataTable GetItemsByDate(DateTime date, string store)
         {
-            string query = "Select * FROM Inventory WHERE DateOrdered = @date AND Branch = @store";
+            string query = "Select * FROM Inventory WHERE DateOrdered > #" + date + "# AND Branch = '" + store + "'";
             using (DataTable dt = new DataTable())
             {
                 using (OleDbConnection con = new OleDbConnection(AccessString))
                 {
                     using (OleDbCommand cmd = new OleDbCommand(query, con))
                     {
-                        cmd.Parameters.Add(new OleDbParameter("@date", OleDbType.Date)).Value = date;
-                        cmd.Parameters.Add(new OleDbParameter("@store", OleDbType.VarChar)).Value = store;
                         using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
                         {
                             try
@@ -320,9 +351,9 @@ namespace RsmgrImporter
             {
                 using (OleDbConnection con = new OleDbConnection(AccessString))
                 {
-                    using (OleDbCommand cmd = new OleDbCommand("Select * FROM Sales WHERE TicketNumber = @ticketnumber", con))
+                    using (OleDbCommand cmd = new OleDbCommand("Select * FROM Sales WHERE TicketNumber = '" + ticketNumber+ "'", con))
                     {
-                        cmd.Parameters.Add(new OleDbParameter("@ticketnumber", OleDbType.VarWChar)).Value = ticketNumber;
+                        //cmd.Parameters.Add(new OleDbParameter("@ticketnumber", OleDbType.VarWChar)).Value = ticketNumber;
                         using (OleDbDataAdapter adapter = new OleDbDataAdapter(cmd))
                         {
                             try

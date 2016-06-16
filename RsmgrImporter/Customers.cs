@@ -8,5 +8,6 @@ namespace RsmgrImporter
 {
     class Customers
     {
+
     }
 }
